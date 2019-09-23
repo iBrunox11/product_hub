@@ -9,7 +9,7 @@ const getNewSku = (array) => {
 const newDate = () => new Date().toString()
 function getInArray(array, sku) {
   return new Promise((resolve, reject) => {
-    const row = array.find(r => r.sku === sku)
+    const row = array.find(r => r.sku == sku)
     if (!row) {
       reject({
         message: 'SKU is not good',
@@ -22,7 +22,7 @@ function getInArray(array, sku) {
 
 function checkIfSkuExists(array, sku) {
   return new Promise((resolve, reject) => {
-    const row = array.find(r => r.sku === sku)
+    const row = array.find(r => r.sku == sku)
     if (!row) {
       resolve(row)
     }

@@ -35,7 +35,7 @@ function insertProduct(newProduct) {
             createdAt: helper.newDate(),
             updatedAt: helper.newDate()
           }
-          newProduct = { ...date, ...newProduct }
+          newProduct = { ...newProduct, ...date }
 
           // delete some fields if exists
           delete newProduct.isMarketable
@@ -50,19 +50,33 @@ function insertProduct(newProduct) {
   })
 }
 
+/**
+ * update product inside "database" (json file)
+ *
+ * @param {String} sku contains the sku to update
+ * @param {Object} newProduct contains the product to update
+ */
 function updateProduct(sku, newProduct) {
   return new Promise((resolve, reject) => {
     helper.getInArray(products, sku)
-      .then(post => {
-        const index = products.findIndex(p => p.sku == post.sku)
-        sku = { sku: post.sku }
-        const date = {
-          createdAt: post.createdAt,
-          updatedAt: helper.newDate()
+      .then(result => {
+        // check if url sku is equals newproduct sku, prevent update the old product with an existing sku
+        if (sku == newProduct.sku) {
+          const index = products.findIndex(p => p.sku === result.sku)
+          const date = {
+            createdAt: result.createdAt,
+            updatedAt: helper.newDate()
+          }
+          // delete some fields if exists
+          delete newProduct.isMarketable
+          delete newProduct.inventory.quantity
+
+          newProduct.sku = sku
+          products[index] = { ...newProduct, ...date }
+          helper.writeJSONFile('./data/products.json', products)
+          resolve(products[index])
         }
-        products[index] = { ...sku, ...date, ...newProduct }
-        helper.writeJSONFile('./data/products.json', products)
-        resolve(products[index])
+        reject({ message: 'the sku of the product param is not equals the sku of the body', status: 404 })
       })
       .catch(err => reject(err))
   })
