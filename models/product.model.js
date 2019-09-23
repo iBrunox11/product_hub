@@ -1,6 +1,6 @@
-const filename = '../data/products.json'
-let products = require(filename)
-const helper = require('../helper.js')
+let products = require('../data/products.json')
+const helper = require('../helpers/helper')
+
 function getProducts() {
   return new Promise((resolve, reject) => {
     if (products.length === 0) {
@@ -12,29 +12,47 @@ function getProducts() {
     resolve(products)
   })
 }
+
 function getProduct(sku) {
   return new Promise((resolve, reject) => {
-    helper.mustBeInArray(products, sku)
+    helper.getInArray(products, sku)
       .then(post => resolve(post))
       .catch(err => reject(err))
   })
 }
+
+/**
+ * insert product inside "database" (json file)
+ *
+ * @param {Object} newProduct contains the product to create
+ */
 function insertProduct(newProduct) {
   return new Promise((resolve, reject) => {
-    const sku = { sku: helper.getNewsku(products) }
-    const date = {
-      createdAt: helper.newDate(),
-      updatedAt: helper.newDate()
+    if (newProduct && newProduct.sku) {
+      helper.checkIfSkuExists(products, newProduct.sku)
+        .then(product => {
+          const date = {
+            createdAt: helper.newDate(),
+            updatedAt: helper.newDate()
+          }
+          newProduct = { ...date, ...newProduct }
+
+          // delete some fields if exists
+          delete newProduct.isMarketable
+          delete newProduct.inventory.quantity
+
+          products.push(newProduct)
+          helper.writeJSONFile('./data/products.json', products)
+          resolve(newProduct)
+        })
+        .catch(err => reject(err))
     }
-    newProduct = { ...sku, ...date, ...newProduct }
-    products.push(newProduct)
-    helper.writeJSONFile(filename, products)
-    resolve(newProduct)
   })
 }
+
 function updateProduct(sku, newProduct) {
   return new Promise((resolve, reject) => {
-    helper.mustBeInArray(products, sku)
+    helper.getInArray(products, sku)
       .then(post => {
         const index = products.findIndex(p => p.sku == post.sku)
         sku = { sku: post.sku }
@@ -43,23 +61,25 @@ function updateProduct(sku, newProduct) {
           updatedAt: helper.newDate()
         }
         products[index] = { ...sku, ...date, ...newProduct }
-        helper.writeJSONFile(filename, products)
+        helper.writeJSONFile('./data/products.json', products)
         resolve(products[index])
       })
       .catch(err => reject(err))
   })
 }
+
 function deleteProduct(sku) {
   return new Promise((resolve, reject) => {
-    helper.mustBeInArray(products, sku)
+    helper.getInArray(products, sku)
       .then(() => {
         products = products.filter(p => p.sku !== sku)
-        helper.writeJSONFile(filename, products)
+        helper.writeJSONFile('./data/products.json', products)
         resolve()
       })
       .catch(err => reject(err))
   })
 }
+
 module.exports = {
   insertProduct,
   getProducts,

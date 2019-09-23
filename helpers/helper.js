@@ -1,5 +1,5 @@
 const fs = require('fs')
-const getNewId = (array) => {
+const getNewSku = (array) => {
   if (array.length > 0) {
     return array[array.length - 1].id + 1
   } else {
@@ -7,9 +7,9 @@ const getNewId = (array) => {
   }
 }
 const newDate = () => new Date().toString()
-function mustBeInArray(array, SKU) {
+function getInArray(array, sku) {
   return new Promise((resolve, reject) => {
-    const row = array.find(r => r.SKU == SKU)
+    const row = array.find(r => r.sku === sku)
     if (!row) {
       reject({
         message: 'SKU is not good',
@@ -19,6 +19,20 @@ function mustBeInArray(array, SKU) {
     resolve(row)
   })
 }
+
+function checkIfSkuExists(array, sku) {
+  return new Promise((resolve, reject) => {
+    const row = array.find(r => r.sku === sku)
+    if (!row) {
+      resolve(row)
+    }
+    reject({
+      message: 'SKU already exists',
+      status: 404
+    })
+  })
+}
+
 function writeJSONFile(filename, content) {
   fs.writeFileSync(filename, JSON.stringify(content), 'utf8', (err) => {
     if (err) {
@@ -27,8 +41,9 @@ function writeJSONFile(filename, content) {
   })
 }
 module.exports = {
-  getNewId,
+  getNewSku,
   newDate,
-  mustBeInArray,
-  writeJSONFile
+  getInArray,
+  writeJSONFile,
+  checkIfSkuExists
 }
